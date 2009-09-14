@@ -1,0 +1,183 @@
+\section{Problem 1}
+Please see attached piece of paper. I don't know how to make circuit diagrams
+in \LaTeX.
+
+\section{Problem 2}
+The value of the second flip-flop is inverted each clock cycle. Assuming the
+flip-flop starts out reset, this means the FF1 bit will be 1 for $2k + 1$ (odd)
+cycles, and 0 for $2k$ (even) cycles.
+
+The value of the first flip-flop only changes when FF1 is 1. So, each odd
+cycle, the bit in FF0 is inverted. Assuming FF0 starts out out reset, this
+means the FF0 bit will be 0 on cycles $4k$ and $4k + 3$, and the bit will be 1
+on cycles $4k + 1$ and $4k + 2$.
+
+\section{Problem 3}
+
+\subsection{Part A}
+The task seems to be computing sum and difference of two 10-dimension vectors.
+The pseudocode is presented in listing \ref{problem3a:code}.
+
+\lstinputlisting[float=bph, language=C, caption=The task performed by the
+MIPS64 code, label=problem3a:code]{6.823/ps1/problem3a.c}
+
+\subsection{Part B}
+Segment B should perform better, because it has less memory loads. Memory loads
+cause pipeline stalls, even if the requested data is in L1 cache.
+
+\subsection{Part C}
+The two segments can produce different results if there is another process
+writing to the memory holding the two input vectors pointed by r1 and r2.
+
+First, segment A should run faster so, given a fixed pattern of writes $(A_i,
+V_i, T_i)$ of value $V_i$ to address $A_i$ at time $T_i$, the pattern might
+interfere with segment B's operation, but not interfere with segment A's
+operation.
+
+Second, segment A has the invariant that a sum and a difference are guaranteed
+to be computed from the same two numbers, regardless of how the memory contents
+changes. Segment B does not have that invariant, because it uses separate loads
+to compute the sum and the difference.
+
+\section{Problem 4}
+
+\subsection{Part A}
+The problem here is that BEQ changes the control flow. More specifically, the
+{\it Instruction Fetch} stage depends on the output of the ALU stage. Actually,
+in a straightforward implementation, the PC (program counter register; input
+for the IF stage) would be updated in the {\it Write Back} stage.
+
+The easiest way to ensure correct behavior would be to stall the pipeline
+for 4 cycles after a conditional branching instruction. Stalling would be
+achieved by inserting NOP instructions in the {\it IF} stage.
+
+Better performance can be achieved by introducing control logic that modify the
+PC register right after the {\it ALU} stage, so the {\it IF} stage can use the
+result immediately. This approach stalls the pipeline for 2 clock cycles
+instead of 4.
+
+\subsection{Part B}
+The problem is that the DSUB operation uses the result of the DSUB operation.
+So the {\it Register File} stage of DSUB must wait for the completion of the
+{\it Write Back} stage of DADD.
+
+The easiest way to ensure correct behavior would be to modify the {\it IF} stage
+to add 3 NOPs after any instruction that writes to a register.
+
+A better-performing solution would do the following:
+\begin{enumerate}
+\item Add logic to the {\it Memory Wait} stage to allow writing to the
+{\it Register File} in this stage, if the write does not involve memory data.
+This is a valid solution for Part A, if the PC is contained in the {\it Register
+File}.
+\item Add logic in the {\it IF} and {\it RF} stages that determines if an
+instruction's output is the same register as next instruction's input, and
+stalls the pipeline in that case.
+\item Stall the pipeline for 2 cycles (not 3, as required by the easy solution),
+if the output of an instruction relies on the input of another instruction.
+\end{enumerate}
+
+\subsection{Part C}
+The problem is that the ADD instruction uses the output of the LD instruction.
+More specifically, the input of the {\it Register File} stage of DADD depends
+on the output of the {\it Write Back} stage of LD. 
+
+The easiest way to ensure correct behavior would be to stall the pipeline for 3
+cycles after any LD instruction. The cycle computation is valid if each memory
+access requires exactly 2 cycles, as suggested by the pipelining diagram, which
+would imply that there is no caching.
+
+A better-performing solution would work along the same lines as in part B, with
+the major difference that the 3 cycle stall cannot be reduced to 2 cycles,
+since the memory output must propagate to the register file. The solution
+becomes more complicated if memory accesses are cached, because the pipeline
+has to be stalled for an unknown number of cycles.
+
+\section{Problem 5}
+I know the ideas behind caching, especially at a software level, but I forgot
+the hardware implementation details. I refered to the caching lecture (Lecture
+19) on the OCW site for 6.004. {\tt http://ocw.mit.edu/}
+
+My source has great figures on cache implementation mechanisms. For that
+reason, I will not attempt to make my own crappy pictures. Instead, I summarize
+the way the implementations work, so that I can show I understand the topic,
+and I refer the reader to the 6.004 slides for the very intuitive figures.
+
+\subsection{Part A}
+A cache is a special memory that is orders of magnitude smaller than the main
+memory, but also orders of magnitue faster. Caches are built on the assumption
+of spatial locality of memory accesses -- if an instruction accesses a location
+in memory, it's likely that some instructions following soon afterwards will
+access the same location, or neighboring locations.
+
+A cache stores the addresses and values of recently accessed memory locations.
+Caches are made up of {\it lines}, and each line contains an association
+between an address and the value of that address. The size of a cache line is
+the size of the value associated with an address, and is measured in bytes or
+machine words.
+
+Cache line addresses are always aligned to cache line boundaries, so the least
+significant bits of a cache line address are always 0, and they don't have to
+be stored. The part of the address that does have to be stored is called a
+line's tag, and the memory taken up by that is called tag RAM. In particular,
+doubling the cache size reduces each line's tag by 1 bit.
+
+\subsection{Part B}
+In higher-level software caches (e.g. memory paging, where memory is a cache
+for a larger disk-based virtual memory), each line has a valid bit, which
+determines if the address-value association at that line is valid. If the valid
+bit is 0, the line is ``empty'', and needs to be re-initialized.
+
+For a RAM cache, it should be possible to initialize the cache on processor
+power-up in a way such that each line is valid.
+
+\subsection{Part C}
+There are two main cache implementations that balance cost and flexibility.
+Fully associative caches are more expensive, but each line in the cache can
+store any address. Fully associative caches are implemented as follows: each
+line has an equality comparator between the significant address bits and the
+line's tag bits; the comparison's outcome (1 for equality, 0 for inequality) is
+ANDed with the NOT of each bit in the line's value, and the results are
+connected to the corresponding cache output bits by pull-up transistors. This
+works because for any address lookup, at most one comparator will produce a 1.
+
+Conversely, direct mapped associative caches are much cheaper but, for a
+given address, there is exactly one line in the cache that could store it. This
+greatly reduces cache performance for access pattern involving different
+addresses that map to the same line. Direct mapped caches are implemented using
+fast SRAM: the tag and value bits for each line are stored in the SRAM, and an
+address lookup is transformed into a lookup in the SRAM. The SRAM's output is
+compared to the address using the same mechanism as direct mapped caches
+(comparator, AND, inverter, pull-up transistor). However, since there is a
+single SRAM output, only one instance of the comparing logic is required for
+the entire cache.
+
+n-way associative caches are a compromise between flexibility and cost. In an
+n-way associative cache, each address can stored in n different lines. This
+greatly reduces the number of memory access patterns that would cause
+contention for a cache line. n-way associative caches are implemented as n
+direct-mapped caches whose results are combined by n instances of the
+comparator logic used in fully-associative caches.
+
+\subsection{Part D}
+As stated in part A, storing multiple words in each line reduces the number of
+tag bits needed per line, which in turn reduces the ratio of tag bits to value
+bits in the cache. Therefore, most caches store multiple words per line. This
+is implemented by starting with the mechanism in part C to look up cache lines,
+then feeding the words in a line to a multiplexer which is controlled by the
+right bits of the address (the most significant bits out of the bits that are
+discarded for tag lookup).
+
+\subsection{Part E}
+A replacement policy is used for direct mapped and n-way associative hashes,
+when the address looked up in the cache is not found. In that case, an
+association that is in the cache at the time of the lookup must be discarded,
+to make room the the address that is currently looked up.
+
+LRU selects the least recently accessed address out of all possible addresses
+(the entire cache for direct mapped caches, the n lines mapped to the new
+address in an n-way cache), while the random replacement policy selects a
+random address. LRU is easier to test for, and provides a clear mechanism that
+works well in practice. Random replacement ensures that there is no known
+worst-case access pattern, so the cache won't look bad in adversarial
+benchmarks (usually put together by a competing supplier).

@@ -1,0 +1,41 @@
+\documentclass{article}
+
+%% Packages 
+\usepackage{epsfig}
+\usepackage{endnotes}
+\usepackage{listings}
+\lstset{numbers=left, frame=lines, tabsize=4, captionpos=b, numberstyle=\tiny}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{boxedminipage}
+\usepackage{appendix}
+\usepackage{clrscode}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+%% Pset author.
+\newcommand{\PsetAuthorName}{Victor Costan}
+\newcommand{\PsetAuthorEmail}{costan@mit.edu}
+
+%% Pset class and instance information.
+\newcommand{\PsetTitle}{Problem Set 1}
+\newcommand{\PsetDueDate}{September 14, 2009}
+\newcommand{\PsetMainFile}{6.823/ps1/all.tex}
+\newcommand{\PsetClassMetadata}{6.823/metadata.tex}
+
+
+\input{\PsetClassMetadata}
+\renewcommand{\leftmark}{\PsetAuthorName\space$<$\PsetAuthorEmail$>$}
+\renewcommand{\rightmark}{\PsetClassNumber\space\PsetClassTerm\space\PsetTitle}
+
+\begin{document}
+
+\title{\PsetClassNumber\space\PsetClassTerm\space\PsetTitle}
+\author{\PsetAuthorName}
+\maketitle
+
+\input{\PsetMainFile}
+\end{document}

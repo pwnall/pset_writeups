@@ -1,0 +1,21 @@
+h1. Problem Set Write-Ups by Victor Costan
+
+This site contains write-ups for the problem sets that I (Victor Costan) was
+assigned in my MIT classes.
+
+h2. Installation
+
+The repository is one big Eclipse project, using the Texlipse plugin that you
+can download at http://texlipse.sourceforge.net/
+
+The write-ups are built using some derivative of the Tex Live distribution that
+can be found at http://www.tug.org/texlive/acquire.html. More specifically, the
+following derivatives are used:
+* MacTex, on MacOS X Snow Leopard: http://www.tug.org/mactex/downloading.html
+* the following packages on Ubuntu 9.10: TBD 
+
+h2. Academic Honesty
+
+If you're a student in one of my classes, I expect that you won't look at my
+solutions before the deadlines for the problem sets. If you use my work for
+other problem sets, I expect that you will acknowledge my contribution.
