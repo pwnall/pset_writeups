@@ -18,4 +18,4 @@ h2. Academic Honesty
 
 If you're a student in one of my classes, I expect that you won't look at my
 solutions before the deadlines for the problem sets. If you use my work for
-other problem sets, I expect that you will acknowledge my contribution.
+other problem sets, I expect that you will acknowledge this source.
