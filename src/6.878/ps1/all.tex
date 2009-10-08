@@ -104,7 +104,7 @@ The initial conditions are $F(0, 0, 0) = 0$, $F(i, j, k) = -\infty$ if $i <
 The program's output is reproduced in figure \ref{problem3:exact30}.
 
 \begin{figure}[htb]
-  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_exact30.png}
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_exact30.pdf}
   \caption{Dotplot for all exact matching 30-mers.}
   \label{problem3:exact30}.
 \end{figure}
@@ -115,12 +115,11 @@ The key observation for my solution is that all the required modifications are
 still exact matching problems, but the subsequence of bases that have to match
 isn't continuous. So, it is sufficient to modify the code to hash the
 subsequences that have to match. Listing \ref{problem3:code} shows the
-code changes needed to produce plots modifications i, ii, iii, and iv.
+code changes needed to produce plot modifications i, ii, iii, and iv.
 
-\begin{lstlisting}[language=Python, caption=The scoring matrix used to
-compute the distance between two genes, label=problem3:code]
-    # length of hash key
-    kmerlen = 30
+\begin{lstlisting}[language=Python, caption=Changes to {\tt main} in {\tt
+ps1-dotplot.py} for plot modifications i-iv, label=problem3:code]
+    # length of hash key kmerlen = 30
     # stride of hash key  # ADDED
     kmerstep = 1          # ADDED
     
@@ -155,25 +154,135 @@ and kmerstep produce the plots for modifications i-iv:
   \item [iv.] kmerlen = 120, kmerstep = 4 
 \end{enumerate}
 
-\subsection {Part C}
+Listing \ref{problem3:code_v} shows a hack that produces plot modification
+v. It's a hack because it doesn't generalize, but the code changes are minimal.
+The parameters used are kmerlen = 100, kmerstep = 30.
 
-\subsection {Part D}
+\begin{lstlisting}[language=Python, caption=Further changes to {\tt main} in
+{\tt ps1-dotplot.py} for plot modification v, label=problem3:code_v]
+    # store sequence hashes in hash table
+    print "hashing seq1..."
+    for i in xrange(len(seq1) - kmerlen + 1):
+        # CHANGE BELOW
+        key = seq1[i:i+kmerlen:kmerstep] + seq1[i+1:i+kmerlen+1:kmerstep]
+        lookup.setdefault(key, []).append(i)
 
-\begin{tabular}{|l|r|r|}
+
+
+    # look up hashes in hash table
+    print "hashing seq2..."
+    hits = []
+    for i in xrange(len(seq2) - kmerlen + 1):
+        # CHANGE BELOW
+        key = seq2[i:i+kmerlen:kmerstep] + seq2[i+1:i+kmerlen+1:kmerstep]
+        
+        # store hits to hits list
+        for hit in lookup.get(key, []):
+            hits.append((i, hit))
+\end{lstlisting}
+
+Figures \ref{problem3:exact100}, \ref{problem3:other60},
+\ref{problem3:third90}, \ref{problem3:fourth120}, \ref{problem3:nother100}
+contain the dotplots produced by the modified scripts.
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_exact100.pdf}
+  \caption{Dotplot for all exact matching 100-mers.}
+  \label{problem3:exact100}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_other60.pdf}
+  \caption{Dotplot for all 60-mers matching every other base.}
+  \label{problem3:other60}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_third90.pdf}
+  \caption{Dotplot for all 90-mers matching every third base.}
+  \label{problem3:third90}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_fourth120.pdf}
+  \caption{Dotplot for all 120-mers matching every fourth base.}
+  \label{problem3:fourth120}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_nthird100.pdf}
+  \caption{Dotplot for all 100-mers that allow a mismatch every 3rd base.}
+  \label{problem3:nother100}.
+\end{figure}
+
+Table \ref{problem3:hitstable} summarizes the sensitivity and specificity for
+all the figures above. Parts C and D discuss the data.
+
+\begin{figure}[htb]
+\center\begin{tabular}{|l|r|r|}
+\hline
+Plot & Sensitivity & Specificity\% \\
 \hline
 Original & 62829 & 24.70\% \\
 \hline
-Modification i & & \\
+Modification i & 1198 & 100.00\% \\
 \hline
-Modification ii & & \\
+Modification ii & 23933 & 38.74\% \\
 \hline
-Modification iii & & \\
+Modification iii & 8887 & 93.86\% \\
 \hline
-Modification iv & & \\
+Modification iv & 6044 & 82.13\% \\
 \hline
-Modification v & & \\
+Modification v & 2707 & 100.00\% \\
 \hline
 \end{tabular}
-\end{tabular}
+\caption{The sensivity and specificity for the the dotplots in Problem 3.}
+\label{problem3:hitstable}.
+\end{figure}
+
+\subsection {Parts C, D}
+
+In general, sensitivity and specificity seem to be at odds. Increasing the
+pattern size increases specificity, and in turn that filters out some
+potentially good matches.
+
+The numbers for modification 4 diverge from the intuitive conclusion drawn
+above. Even though the larger pattern is more specific, the sequences that
+it are not relevant to the alignment that we are seeking. The explanation is
+probably that the pattern is so ``sparse'' (3 gaps for every base match) that
+it doesn't model the alignment that we're looking for.
+
+In conclusion, increasing the pattern size decreases sensitivity, and
+increasing the number of gaps in the pattern decreases specificity. For a fixed
+number of base matches in the pattern, there is a ``sweet spot'' in
+specificity that isn't obvious. In our example, the sweet spot seems to be at
+90-mers that match every 3$^\textrm{rd}$ base.
+
 
 \subsection {Part E}
+
+Figure \ref{problem3:inversion} shows a dotplot of the Hox region against
+itself. I used the parameters kmerlen = 120, kmerstep = 1. The inverted region
+shows up as a gap.
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.878/ps1/figs/p3_inversion.pdf}
+  \caption{Dotplot for the human Hox vs the human Hox region with an inversion.}
+  \label{problem3:inversion}.
+\end{figure}
+
+I tried to get the inverted region to show as an inverted diagonal line, by
+adding the inverted 120-mers to the hash table, as shown in listing
+\ref{problem3:code_inversion}. For some reason, I can't get it to work right
+now.
+
+\begin{lstlisting}[language=Python, caption=Further changes to {\tt main} in
+{\tt ps1-dotplot.py} for inversion detection, label=problem3:code_inversion]
+    # store sequence hashes in hash table
+    print "hashing seq1..."
+    for i in xrange(0, len(seq1) - kmerlen + 1):
+        key = seq1[i:i+kmerlen:kmerstep]
+        lookup.setdefault(key, []).append(i)
+        lookup.setdefault(key[::-1], []).append(i)   # ADDED
+\end{lstlisting}
+
