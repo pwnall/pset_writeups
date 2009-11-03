@@ -15,10 +15,76 @@ My implementations do the following when a new block is brought into the cache:
   whose bits match.
 \end{itemize}
 
+Implementation note: I rewrote the testing script to be able to test different
+pintools (or the same pintool with different parameters) in parallel. I removed
+the parallelization bottleneck which was using a statically-named temporary
+directory. I also fixed the results oudirectory permissions bug (the original
+script used 666, which makes the results directory non-browsable on systems
+that actually obey the permission bits, which is everything except AFS). Last
+but not least, my testing tool is driven by configuration files. I checked in
+the tool (\texttt{./pin_spec.rb}) as well as my configuration files
+(\texttt{pin_spec.yml}, \texttt{spec_suite.yml}, and \texttt{tests/1.yml} -
+\texttt{tests/22.yml}).
+
+My results were produced using 10 computers in an Athena cluster over 5 hours.
+About 20 CPU-hours were wasted due to bugs at various levels, and the results
+of the other 30 hours made it into this paper. I used the cluster during
+off-peak hours.
+
 \section{Question 1}
+The lab handout is unclear about the desired way of varying the parameters. I
+changed one parameter (number of rows, block size, associativity) while keeping
+the other parameters constant. I only increased the parameters because the
+default parameters yield a cache size of 1k, and today's L1 caches are bigger.
+
+I compared caches of the same size, obtained by increasing one of the
+parameters from the basic configuration. The graphs have the 3 caches and
+initial configuration as the baseline. Graphs show cache misses, so lower lines
+indicate better performance.
+
+Figures \ref{q1:4k}, \ref{q1:8k}, and \ref{q1:16k} show the results.
+
+The best way of reducing cache misses, for small caches, seems to be to
+increasing the block size, which reduces compulsory misses. This is not
+surprising, because the conclusion is in line with the course textbook, and
+with today's manufacturers' decisions to use 32-byte blocks.
+
+Increasing the block size becomes less desirable once the block size passes 32
+bytes, and compulsory misses are starting to become dominated by conflict and
+capacity misses. Caches with higher associativity dominate caches with higher
+row counts, but the difference isn't very big, which suggests that
+set-associative caches are not worth the extra latency they would add to an L1
+cache. Again, this is in line with previous findings.
+
+Last, caches with physical indexing show a significantly better hit rate than
+caches with virtual indexing. However, once virtual indexing is employed, it
+seems that there's no big difference between virtual tagging and physical
+tagging. On the sad side, the cache simulation seems to have a bug because, in a
+couple of cases, virtually-tagged caches seem to perform better than
+physically-tagged caches, which is pretty much impossible.
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.823/lab2/figs/ccc_4k.png}
+  \caption{Miss rates in 4kb caches obtained by increasing a parameter
+  (number of rows, block size, associativty) from a baseline 2kb direct-mapped
+  cache with 4-byte blocks.} \label{q1:4k}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.823/lab2/figs/ccc_8k.png}
+  \caption{Miss rates in 8kb caches obtained by increasing a parameter
+  (number of rows, block size, associativty) from a baseline 2kb direct-mapped
+  cache with 4-byte blocks.} \label{q1:8k}.
+\end{figure}
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.823/lab2/figs/ccc_16k.png}
+  \caption{Miss rates in 16kb caches obtained by increasing a parameter
+  (number of rows, block size, associativty) from a baseline 2kb direct-mapped
+  cache with 4-byte blocks.} \label{q1:16k}.
+\end{figure}
 
 \section{Question 2}
-
 To determine the working set sizes, I used direct-mapped caches with the
 minimum block size (4 bytes). I used a 32Mb cache for computing the compulsory
 misses. 32Mb seems like a good size for the RAM in a 2000-era computer, and
