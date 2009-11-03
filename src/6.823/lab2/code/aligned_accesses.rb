@@ -8,9 +8,9 @@ require 'rubygems'
 require 'gnuplot'
 require '6.823/lab2/code/lab2common.rb'
 
-bench_cases_fix_names 'accesses'
+bench_cases_fix_names 'aligned'
 cases = bench_cases
-stats = bench_values(cases)
+stats = aligned_access_values(cases)
 stats.keys.each do |name|
   total_r, total_w, aligned_r, aligned_w = *stats[name]
   stats[name] =  [(total_r - aligned_r) / total_r.to_f,
@@ -31,7 +31,7 @@ File.open('6.823/lab2/figs/unaligned_accesses.tex', 'w') do |f|
   f.write " \\\\\n\\hline\n"
   stats.keys.sort.each do |name|
     f.write "#{name} "
-    f.write stats[name].map { |number| "& #{'%.5f' % number}\\% " }.join
+    f.write stats[name].map { |number| "& #{'%.5f' % (number * 100)}\\% " }.join
     f.write " \\\\\n\\hline\n"
   end
   f.write "\\end{tabular}\n"

@@ -1,0 +1,7 @@
+--- 
+:tool_binary: memoryAccess
+:output_dir: tests/aligned
+:tool_args: 
+:skip_tests: 
+- AMMP 1
+- MGRID 1

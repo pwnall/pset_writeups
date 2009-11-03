@@ -1,9 +1,71 @@
+The lab assignments under-specifies the operation of virtual-indexed caches, as
+it does not specify what method to use to avoid aliasing (having multiple
+entries in the cache for the same physical address, if it's represented by
+multiple virtual addresses).
+
+My implementations do the following when a new block is brought into the cache:
+\begin{itemize}
+  \item The virtually-indexed physically-tagged cache checks the tags in all
+  the cache lines that could potentially hold the virtual address (one line for
+  small caches, more lines for large caches), and invalidates any location that
+  has the same tag.
+  \item The virtually-indexed virtually-tagged cache checks the physical bits
+  in the tags (could be zero bits, if the cache is big enough) against the
+  physical bits in the new block's address, and invalidates all the blocks
+  whose bits match.
+\end{itemize}
+
+\section{Question 1}
+
+\section{Question 2}
+
+To determine the working set sizes, I used direct-mapped caches with the
+minimum block size (4 bytes). I used a 32Mb cache for computing the compulsory
+misses. 32Mb seems like a good size for the RAM in a 2000-era computer, and
+higher values made the \texttt{caches} pintool crash.
+
+Figure \ref{q2:miss_rates} shows the miss rates. Table \ref{q2:working_set}
+shows the probable working set sizes, based on the miss rates obtained above.
+
+\begin{figure}[htb]
+  \includegraphics[width=6.8in]{6.823/lab2/figs/working_set.png}
+  \caption{Miss rates in direct-mapped physically-indexed physically-tagged
+  caches with 4-byte blocks. }
+  \label{q2:miss_rates}.
+\end{figure}
+
+\begin{figure}[htb]
+\center
+
+\begin{tabular}{lcr}
+\hline
+Benchmark & Integer / FP & Working set size \\
+\hline
+bzip2 & INT & \\
+cc1 & INT & \\
+crafty & INT & \\
+gap & INT & \\
+gzip & INT & \\
+parser & INT & \\
+\hline
+applu & FP & \\
+art & FP & \\
+equake & FP & \\
+mesa & FP & \\
+swim & FP & \\
+\hline
+\end{tabular}
+
+\caption{The working set sizes for the SPEC 2000 benchmark suite. }
+\label{q2:working_set}
+\end{figure}
+
 \section{Question 3}
 The fourth cache model doesn't make any sense. The different cache models in
 this lab are motivated by the desire of parallelizing cache access and address
 translation.
 
-If the cache is physically index, it means the cache access cannot start unil
+If the cache is physically indexed, it means the cache access cannot start unil
 after address translation. Since we waited for address translation anyway, we
 might as well use the physical address for the tag. There's no reason to deal
 with the additional complexities of using virtual tagging.
@@ -49,74 +111,11 @@ AST out of some language. The one that didn't come to my mind waas
 \texttt{mesa}, which is a software OpenGL implementation, and therefore has to
 work with a software framebuffer.
 
-The assumption of aligned accesses seems to make sense. The numbers reported
-above are an upper bound of unaligned accesses because, from a cache
-perspective, byte accesses can be satisfied even if they're unaligned, and
+The assumption of aligned accesses seems to make sense for most benchmarks. The
+numbers reported above are an upper bound of unaligned accesses because, from a
+cache perspective, byte accesses can be satisfied even if they're unaligned, and
 multibyte accesses are only problematic if they span across 2 cache blocks.
 Furthermore, the applications which are most impacted by unaligned access don't
 really run on consumer computers -- most people don't compile their code, and a
 vast majority of desktop and mobile platforms have accelerated graphics
 nowadays.
-
-
-\section{X 1}
-Figure \ref{q1:frequencies} shows the dependencies obtained as suggested in the
-lab handout.
-
-\begin{figure}[htb]
-  \includegraphics[width=6.8in]{6.823/lab1/figs/frequencies.png}
-  \caption{Instruction dependency frequencies for the 11 benchmarks. }
-  \label{q1:frequencies}.
-\end{figure}
-
-The graph is not too helpful, except to tell us that most instructions depend
-on registers written in the past 4-5 instructions. Therefore, we use figure
-\ref{q1:frequencies_zoom} to take a better look at the dependencies at most 5
-instructions apart.
-
-\begin{figure}[htb]
-  \includegraphics[width=6.8in]{6.823/lab1/figs/frequencies_zoom.png}
-  \caption{Instruction dependency frequencies for the 11 benchmarks. }
-  \label{q1:frequencies_zoom}.
-\end{figure}
-
-Given the dependency statistics, it seesms like architecture A would be
-significantly faster than architecture B. In each benchmark, between 40\% -
-80\% of the instructions depend on the previous instruction. In architecture B,
-all instructions with dependencies on the previous instruction would have to be
-stalled for 1 cycle, while the previous instruction writes its registers. This
-means 40\%-80\% pipeline bubbles, which could be avoided by the forwarding
-circuitry.
-
-\section{X 2}
-
-Figure \ref{q2:reg_frequencies} shows the per-register breakdown for the
-instruction dependency. For each register and instruction distance, we computed
-the proportion of dependencies that are owed to that register. We averaged the
-values for each benchmark. We only plotted registers which contributed a
-dependency of at least 0.005\% on for at least one distance.
-
-\begin{figure}[htb]
-  \includegraphics[width=6.8in]{6.823/lab1/figs/reg_frequencies.png}
-  \caption{Instruction dependency frequencies broken down by register. }
-  \label{q2:reg_frequencies}.
-\end{figure}
-
-The graph suggests that a few registers are responsible for most dependencies.
-This is not very surprising, given the x86 architecture's predilection to use
-the \texttt{eax} register as an accumulator, \texttt{esi} and \texttt{edi}
-as pointers, and the presence of a condition flags register.
-
-The best (but most difficult to implement) suggestion would be to give the
-instruction set a makeover so it looks more like a RISC instruction set. It's
-not cool to have 8 registers, and instructions with limitations on the registers
-they can use. However, as Alpha found out, this strategy might not work
-commercially.\footnote{One could argue that, even though the strategy failed in
-the 1990s, we're living in a different landscape right now, where many servers
-are running some flavor of UNIX/Linux. So, maybe the instruction set will be
-redesigned one day.}
-
-Assuming we're stuck with the ISA, it seems that (limited) forwarding is very
-worth-while. The dependencies seem to taper off after 4 cycles, so it's
-probably not worth forwarding for more than 4 cycles. This is important in
-super-pipelined architectures, like the latest Pentiums and Core processors.

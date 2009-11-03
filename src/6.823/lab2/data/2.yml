@@ -1,0 +1,7 @@
+--- 
+:tool_binary: caches
+:output_dir: tests/x3/r10b2a1
+:tool_args: -m 32 -p 12 -r 10 -b 2 -a 1
+:skip_tests: 
+- AMMP 1
+- MGRID 1
