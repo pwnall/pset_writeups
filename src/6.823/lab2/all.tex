@@ -22,8 +22,8 @@ directory. I also fixed the results oudirectory permissions bug (the original
 script used 666, which makes the results directory non-browsable on systems
 that actually obey the permission bits, which is everything except AFS). Last
 but not least, my testing tool is driven by configuration files. I checked in
-the tool (\texttt{./pin_spec.rb}) as well as my configuration files
-(\texttt{pin_spec.yml}, \texttt{spec_suite.yml}, and \texttt{tests/1.yml} -
+the tool (\texttt{./pin\_spec.rb}) as well as my configuration files
+(\texttt{pin\_spec.yml}, \texttt{spec\_suite.yml}, and \texttt{tests/1.yml} -
 \texttt{tests/22.yml}).
 
 My results were produced using 10 computers in an Athena cluster over 5 hours.
@@ -43,25 +43,6 @@ initial configuration as the baseline. Graphs show cache misses, so lower lines
 indicate better performance.
 
 Figures \ref{q1:4k}, \ref{q1:8k}, and \ref{q1:16k} show the results.
-
-The best way of reducing cache misses, for small caches, seems to be to
-increasing the block size, which reduces compulsory misses. This is not
-surprising, because the conclusion is in line with the course textbook, and
-with today's manufacturers' decisions to use 32-byte blocks.
-
-Increasing the block size becomes less desirable once the block size passes 32
-bytes, and compulsory misses are starting to become dominated by conflict and
-capacity misses. Caches with higher associativity dominate caches with higher
-row counts, but the difference isn't very big, which suggests that
-set-associative caches are not worth the extra latency they would add to an L1
-cache. Again, this is in line with previous findings.
-
-Last, caches with physical indexing show a significantly better hit rate than
-caches with virtual indexing. However, once virtual indexing is employed, it
-seems that there's no big difference between virtual tagging and physical
-tagging. On the sad side, the cache simulation seems to have a bug because, in a
-couple of cases, virtually-tagged caches seem to perform better than
-physically-tagged caches, which is pretty much impossible.
 
 \begin{figure}[htb]
   \includegraphics[width=6.8in]{6.823/lab2/figs/ccc_4k.png}
@@ -84,11 +65,30 @@ physically-tagged caches, which is pretty much impossible.
   cache with 4-byte blocks.} \label{q1:16k}.
 \end{figure}
 
+The best way of reducing cache misses, for small caches, seems to be to
+increasing the block size, which reduces compulsory misses. This is not
+surprising, because the conclusion is in line with the course textbook, and
+with today's manufacturers' decisions to use 32-byte blocks.
+
+Increasing the block size becomes less desirable once the block size passes 32
+bytes, and compulsory misses are starting to become dominated by conflict and
+capacity misses. Caches with higher associativity dominate caches with higher
+row counts, but the difference isn't very big, which suggests that
+set-associative caches are not worth the extra latency they would add to an L1
+cache. Again, this is in line with previous findings.
+
+Last, caches with physical indexing show a significantly better hit rate than
+caches with virtual indexing. However, once virtual indexing is employed, it
+seems that there's no big difference between virtual tagging and physical
+tagging. On the sad side, the cache simulation seems to have a bug because, in a
+couple of cases, virtually-tagged caches seem to perform better than
+physically-tagged caches, which is pretty much impossible.
+
 \section{Question 2}
 To determine the working set sizes, I used direct-mapped caches with the
-minimum block size (4 bytes). I used a 32Mb cache for computing the compulsory
-misses. 32Mb seems like a good size for the RAM in a 2000-era computer, and
-higher values made the \texttt{caches} pintool crash.
+minimum block size (4 bytes). I used a 8Mb cache for computing the compulsory
+misses. Higher values made the \texttt{caches} pintool really slow, and did not
+finish in time to be included in this report.
 
 Figure \ref{q2:miss_rates} shows the miss rates. Table \ref{q2:working_set}
 shows the probable working set sizes, based on the miss rates obtained above.
@@ -107,24 +107,34 @@ shows the probable working set sizes, based on the miss rates obtained above.
 \hline
 Benchmark & Integer / FP & Working set size \\
 \hline
-bzip2 & INT & \\
-cc1 & INT & \\
-crafty & INT & \\
-gap & INT & \\
-gzip & INT & \\
-parser & INT & \\
+bzip2 & INT & 32kb \\
+cc1 & INT & > 256kb \\
+crafty & INT & 64kb \\
+gap & INT & >256kb \\
+gzip & INT & > 256kb \\
+parser & INT & > 256kb \\
 \hline
-applu & FP & \\
-art & FP & \\
-equake & FP & \\
-mesa & FP & \\
-swim & FP & \\
+applu & FP & > 256kb \\
+art & FP & > 256kb \\
+equake & FP & 64kb \\
+mesa & FP & 64kb \\
+swim & FP & > 256kb \\
 \hline
 \end{tabular}
 
 \caption{The working set sizes for the SPEC 2000 benchmark suite. }
 \label{q2:working_set}
 \end{figure}
+
+Both the integer and the floating point benchmarks have a mix of small
+(around 64kb) and large work sets (greater than 256kb). An interesting case is
+\texttt{bzip2}, which uses a lot of memory (I know that, because I know how the
+Burrows-Wheeler transform works), but also has very good cache locality.
+Integer benchmarks seem to have bigger worksets, based on the fact that miss
+rates still drop significantly as the cache size goes to 256kb / 512kb. All
+benchmarks have working sets that exceed the L1 caches of 2000 (around 4kb, if
+memory serves me well), but some of them fit snuggly in L2 caches, which used
+to be around 64-128kb (again, quoted from memory).
 
 \section{Question 3}
 The fourth cache model doesn't make any sense. The different cache models in
@@ -144,13 +154,26 @@ during cache operation.
 The physically-indexed physically-tagged cache isn't impacted by this change at
 all, since it's oblivious to address translation.
 
-The virtually-indexed virtually-tagged cache 
-
 The virtually-indexed physically-tagged cache is equipped to deal with this
 change. If the mapping changes, the tag will not match, so the cache will not
 give a bad answer by mistake. The cache's design has to deal with aliasing
 (different virtual addresses pointing to the same physical address) for the
 single-process case, so multiple processes don't introduce a change.
+
+The virtually-indexed virtually-tagged cache cannot function correctly with a
+naive implementation. Process ID bits will have to be added to the tag bits. On
+the bright side, the process ID bits count as physical tag bits, which allows
+for bigger associative caches. Clarification: in a virtually-indexed,
+virtually-tagged cache, the physical bits of the tag are the bits that belong
+to the page offset, and therefore will not be changed by address translation.
+The number of physical tag bits determines the maximum associativity of the
+cache. For example, a 4-way associative cache is useless with 1 physical tag
+bit, because a row will never have all its 4 ways filled.
+
+For the 512-bytes cache with 256-bytes pages, all the physically-tagged
+combinations will work (with better or worse results). The virtually-tagged
+cache model can't be implemented. A $2^n$-row $2^b$-byte block cache would have
+$8 - n - b$ physical tag bits. However,
 
 The TAs would have to modify the address translation routine in our source code
 to simulate different processes, so I doubt that will be part of the tests. 
@@ -169,13 +192,13 @@ accesses for the SPEC 2000 benchmark suite. }
 \label{q5:unaligned_accesses}
 \end{figure}
 
-The bulk of unaligned accesses come from \texttt{bzip2}, which is a
-compression tool, and therefore it works with streams of bytes. Other
-significant sources of unaligned accesses are also processing streams
-of bytes -- \textt{cc} compiles C code, and \textt{parser} presumably builds an
-AST out of some language. The one that didn't come to my mind waas
-\texttt{mesa}, which is a software OpenGL implementation, and therefore has to
-work with a software framebuffer.
+The bulk of unaligned accesses come from \texttt{bzip2}, which is a compression
+tool, and therefore it works with streams of bytes. Other significant sources
+of unaligned accesses are also processing streams of bytes -- \textt{cc}
+compiles C code, and \textt{parser} presumably builds an AST out of some
+language. The one that didn't come to my mind was \texttt{mesa}, which is
+(hopefully, if my guess is right) a software OpenGL implementation, and
+therefore has to work with a software framebuffer.
 
 The assumption of aligned accesses seems to make sense for most benchmarks. The
 numbers reported above are an upper bound of unaligned accesses because, from a

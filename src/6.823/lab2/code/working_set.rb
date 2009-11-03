@@ -11,7 +11,8 @@ require '6.823/lab2/code/lab2common.rb'
 bench_cases_fix_names 'aligned'
 cases = bench_cases
 data_sets = {'r8b2a1' => '1k' , 'r9b2a1' => '2k', 'r10b2a1' => '4k',
-             'r11b2a1' => '8k', 'r12b2a1' => '16k', 'r13b2a1' => '32k'}
+             'r11b2a1' => '8k', 'r12b2a1' => '16k', 'r13b2a1' => '32k',
+             'r14b2a1' => '64k', 'r15b2a1' => '128k', 'r16b2a1' => '256k'}
 stats = data_sets.keys.map do |data_set|
   values = cache_perf_values(cases, data_set)
   [data_set, values]
