@@ -1,0 +1,7 @@
+--- 
+:tool_binary: bpredictor
+:tool_args: ""
+:suite_path: ./spec_suite.yml
+:skip_tests: 
+- AMMP 1
+- MGRID 1

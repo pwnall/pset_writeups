@@ -1,0 +1,94 @@
+\section{Question 1}
+The default implementation of the branch prediction simulation has the
+following low-hanging fruits, in terms of speed optimizations.
+\begin{enumerate}
+  \item The counters for the branch predictor's performance are updated in two
+  nested \texttt{if} statements, which means two branches. Since the lab is all
+  about branch prediction, I believe this is the problem that we were supposed
+  to notice. I replaced the individual counter variables with a 2 by 2 array
+  and rewrote the updating logic so the compiler can use \texttt{cmov}
+  instructions.
+  \item The predictor has a base class which declares both
+  \texttt{makePrediction} and \texttt{makeUpdate} as virtual functions. This
+  causes indirect jumps, which stress the BTB, and is completely unnecessary,
+  as the BranchPredictor implementation that will be used is known at
+  compile-time. I fixed this by removing the base BranchPredictor class
+  completely. I don't need it to implement multiple predictors, because I don't
+  need to use them via generic pointers.
+\end{enumerate} 
+
+The implementation also has stylistic issues - pretty much all C++ style guides
+I've read agree that class names should start with an uppercase letter
+(see \texttt{myBranchPredictor}), and variable names should start with
+a lowercase letter or underscore (see \texttt{BP}).
+
+Fixing the above issues did not yield a signficantly faster running time for
+the tests on \texttt{linerva}. So I might have missed the real issue.
+
+\section{Question 2}
+I chose to submit the Alpha 21264 branch predictor, outlined in Slide 24 in the
+class lecture notes. The predictor is a tournament predictor, choosing between
+a local history-based predictor, and a global history-based predictor. The
+choice is made using a table of saturating 2-bit counters, based on global
+history. My choice is based on the trade-off between accuracy and implementation
+time.
+
+I used the exact choices in the slide:
+\begin{itemize}
+  \item The local history-based predictor uses a 10kb local history table
+  (1,024 entries with 10 history bits per entry), plus a 3kb local prediction
+  table ($2^{10} = 1,024$ 3-bit saturating counters).
+  \item The global history predictor uses a 12-bit global history register and
+  a 8kb table ($2^{12} = 4,096$ 2-bit saturating counters).
+  \item The predictor selector also uses a 8kb table ($2^{12} = 4,096$ 2-bit
+  saturating counters).
+\end{itemize}
+
+These choices used up 29 kilobits out of the 33 kilobit budget. I was tempted
+to use the remaining 4 kilobits to implement a loop predictor, but I gave up
+when I realized I would have to figure out a way to integrate it with the other
+predictors. The predictor's performance is shown in table
+\ref{q2:predictor_acc}.
+
+\begin{table}[htb]
+\center
+\input{6.823/lab3/figs/accuracy.tex}
+\caption{The accuracy of the submitted branch predictor (Alpha 21264) on the
+SPEC 2000 benchmark suite. }
+\label{q2:predictor_acc}
+\end{table}
+
+I did some Google-based research, and looked closely at the result of the 2004
+Championship Branch Prediction. I also skimmed through the 2006 2nd
+Championship Branch Prediction. The winning predictors were very complex, and
+didn't promise a 98\% accuracy, which was rather discouraging. The conclusion
+was sad, because I broke up my implementation into nice, reusable building
+blocks using C++ templates and operator overloading.
+
+I tried implementng a perceptron-based predictor, and it yielded weak results
+(around 85\% accuracy), so I gave up on that avenue as well.
+
+\section{Question 3}
+I implemented the Alpha 21264 predictor, exactly as presented in class.
+Therefore, I can claim with 100\% certainty that the predictor can be
+implemented in hardware :)
+
+\section{Question 4}
+Every branch predictor will have to deal with the fact that several branch
+predictions will be in flight at the same time, because branch resolution takes
+a long time (hence the need for a predictor), and the instruction stream might
+contain branching instructions that are close together, and latter branches must
+be pushed through the pipeline before the first branch is resolved.
+
+The first consequence of this problem is that the real predictor accuracy will
+be lower than the accuracy given by our simulator, because we will not be able
+to update the predictor's state.
+
+The second consequence is that we'll have to update crucial predictor state
+(e.g., the global history register) speculatively, in order to get a decent
+prediction accuracy. The global history is a single register, so it's
+reasonable to make it a part of the pipeline. On the other hand, in order to
+update local histories speculatively, we'll need to build a fast buffer of
+uncomitted updates -- this means a small fully-associative cache that can hold
+many versions of the same local history table entry, together with logic for
+committing and killing entries.
