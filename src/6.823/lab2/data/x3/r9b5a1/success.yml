@@ -1,0 +1,96 @@
+--- 
+:tool_args: 
+- -m
+- "32"
+- -p
+- "12"
+- -r
+- "9"
+- -b
+- "5"
+- -a
+- "1"
+:suite: 
+  GAP 1: 
+    args: 
+    - -l
+    - /mit/6.823/Fall09/CINT2000/254.gap/data/all/input
+    - -q
+    - -m
+    - 64M
+    stdin: /mit/6.823/Fall09/CINT2000/254.gap/data/test/input/test.in
+    binary: /mit/6.823/Fall09/CINT2000/254.gap/exe/gap_base.x86_linux
+  APPLU 1: 
+    args: []
+
+    stdin: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/173.applu/data/test/input/applu.in
+    binary: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/173.applu/exe/applu_base.none
+  ART 1: 
+    args: 
+    - -scanfile
+    - /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/179.art/data/test/input/c756hel.in
+    - -trainfile1
+    - /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/179.art/data/test/input/a10.img
+    - -stride
+    - "2"
+    - -startx
+    - "134"
+    - -starty
+    - "220"
+    - -endx
+    - "139"
+    - -endy
+    - "225"
+    - -objects
+    - "1"
+    binary: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/179.art/exe/art_base.none
+  MESA 1: 
+    args: 
+    - -frames
+    - "10"
+    - -meshfile
+    - /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/177.mesa/data/test/input/mesa.in
+    binary: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/177.mesa/exe/mesa_base.none
+  GCC 1: 
+    args: 
+    - /mit/6.823/Fall09/CINT2000/176.gcc/data/test/input/cccp.i
+    - -o
+    - foo.o
+    binary: /mit/6.823/Fall09/CINT2000/176.gcc/exe/cc1_base.x86_linux
+  GZIP 1: 
+    args: 
+    - /mit/6.823/Fall09/CINT2000/164.gzip/data/test/input/input.compressed
+    - "2"
+    binary: /mit/6.823/Fall09/CINT2000/164.gzip/exe/gzip_base.x86_linux
+  CRAFTY 1: 
+    args: []
+
+    stdin: /mit/6.823/Fall09/CINT2000/186.crafty/data/test/input/crafty.in
+    binary: /mit/6.823/Fall09/CINT2000/186.crafty/exe/crafty_base.x86_linux
+  EQUAKE 1: 
+    args: []
+
+    stdin: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/183.equake/data/test/input/inp.in
+    binary: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/183.equake/exe/equake_base.none
+  BZIP 1: 
+    args: 
+    - /mit/6.823/Fall09/CINT2000/256.bzip2/data/test/input/input.random
+    - "2"
+    binary: /mit/6.823/Fall09/CINT2000/256.bzip2/exe/bzip2_base.x86_linux
+  PARSER 1: 
+    args: 
+    - /mit/6.823/Fall09/CINT2000/197.parser/data/all/input/2.1.dict
+    - -batch
+    stdin: /mit/6.823/Fall09/CINT2000/197.parser/data/test/input/test.in
+    directory: /mit/6.823/Fall09/CINT2000/197.parser/data/all/input/
+    binary: /mit/6.823/Fall09/CINT2000/197.parser/exe/parser_base.x86_linux
+  SWIM 1: 
+    args: []
+
+    stdin: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/171.swim/data/test/input/swim.in
+    binary: /afs/athena.mit.edu/course/6/6.823/Fall09/CFP2000/171.swim/exe/swim_base.none
+:skip_tests: 
+- AMMP 1
+- MGRID 1
+:output_dir: /afs/athena.mit.edu/user/c/o/costan/6.823/costan/lab2handout/tests/x3/r9b5a1
+:tool_binary: /afs/athena.mit.edu/user/c/o/costan/6.823/costan/lab2handout/caches

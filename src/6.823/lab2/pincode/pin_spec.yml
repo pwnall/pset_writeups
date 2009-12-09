@@ -1,0 +1,7 @@
+--- 
+:tool_binary: cache
+:tool_args: -m 32 -p 12 -r 10 -b 5 -a 2
+:suite_path: ./spec_suite.yml
+:skip_tests: 
+- AMMP 1
+- MGRID 1
